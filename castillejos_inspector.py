@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from castillejos_src.world import World
 
 import json
 import random
@@ -30,10 +31,35 @@ class Player():
 
     def answer(self, question):
         
+        world = World()
+        world.set_env(question["game state"])
+        
         # work
         data = question["data"]
         
-        response_index = random.randint(0, len(data)-1)
+        if question['question type'] == 'select character':
+            actions = world.get_possible_actions(question['game state'])
+
+            L = len(actions)
+            self._decisions = actions[0]
+            for l in range(1, L):
+                if self._decisions['value'] < actions[l]['value']:
+                    self._decisions = actions[l]
+
+            L = len(data)
+            for l in range(0, L):
+                if data[l]['color'] == self._decisions['color']:
+                    response_index = l
+                    break
+                       
+        elif question['question type'] == 'select position':
+            L = len(data)
+            for l in range(0, L):
+                if data[l] == self._decisions['position']:
+                    response_index = l
+                    break
+        else:
+            response_index = random.randint(0, len(data)-1)
 
         return response_index
 
