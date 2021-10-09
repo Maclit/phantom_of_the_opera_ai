@@ -58,6 +58,8 @@ class Player():
                 if data[l] == self._decisions['position']:
                     response_index = l
                     break
+        elif question['question type'] == 'grey character power':
+            response_index = self._decisions['grey character power']
         else:
             response_index = random.randint(0, len(data)-1)
 

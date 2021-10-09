@@ -148,7 +148,6 @@ class World():
         for char in game_state['character_cards']:
             if char['suspect'] == True:    
                 score = score + self.compute_value_fantom(decision, game_state, char['color'])
-        print(score)
         return -score
 
     
