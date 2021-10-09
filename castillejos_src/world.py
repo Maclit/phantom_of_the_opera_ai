@@ -28,6 +28,27 @@ class World():
         else:
             active_passages = MAP_PATHS
         return [room for room in active_passages[position] if set([room, position]) != set(blocked)]
+
+    def get_positions(self, card, game_state):
+        characters_in_room = [q for q in game_state['character_cards'] if q['position'] == card['position']]
+        number_of_characters_in_room = len(characters_in_room)
+        available_rooms = []
+        available_rooms.append(self.get_adjacent_positions(card['position'], card['color'], game_state['blocked']))
+        for step in range(1, number_of_characters_in_room):
+            next_rooms = []
+            for room in available_rooms[step - 1]:
+                next_rooms += self.get_adjacent_positions(room, card['color'], game_state['blocked'])
+            available_rooms.append(next_rooms)
+        temp = []
+        for sublist in available_rooms:
+            for room in sublist:
+                temp.append(room)
+        temp = set(temp)
+        available_positions = list(temp)
+        if card['position'] in available_positions:
+            available_positions.remove(card['position'])      
+        return available_positions
+
     
     def get_possible_actions(self, game_state, fantom=False):
         active_cards = game_state['active character_cards']
@@ -40,7 +61,7 @@ class World():
             color = card['color']
             
             # Get all possible positions
-            positions = self.get_adjacent_positions(card['position'], card['color'], game_state['blocked'])
+            positions = self.get_positions(card, game_state)
             for position in positions:
                 
                 decision = {}
