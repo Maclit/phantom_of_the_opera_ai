@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Class to simulate the environnement and build the game tree
+Class to simulate the environnement and build the game decision tree.
+All possbile actions for a turn will be considered and scored.
 """
 
 MAP_SIZE = 10
