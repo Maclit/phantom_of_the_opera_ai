@@ -73,6 +73,10 @@ class World():
             if new_game_state['active character_cards'][l]['color'] == decision['color']:
                 new_game_state['active character_cards'].remove(new_game_state['active character_cards'][l])
                 break
+
+        # Shadow
+        if decision['color'] == 'grey':
+            new_game_state['shadow'] = decision['grey character power']
             
         return new_game_state
 
@@ -106,6 +110,11 @@ class World():
                 decision = {}
                 decision['color'] = color
                 decision['position'] = position
+
+                if color == 'grey':
+                    for index in range (0, 10):
+                        if index != game_state['shadow']:
+                            decision['grey character power'] = index
 
                 if fantom == True:
                     decision['value'] = self.compute_value_fantom(decision, game_state)
