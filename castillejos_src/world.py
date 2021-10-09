@@ -50,7 +50,7 @@ class World():
         return available_positions
 
     
-    def step(self, decision, game_state):
+    def step(self, decision, game_state, fantom):
         new_game_state = game_state
         
         # Positions
@@ -73,24 +73,82 @@ class World():
             if new_game_state['active character_cards'][l]['color'] == decision['color']:
                 new_game_state['active character_cards'].remove(new_game_state['active character_cards'][l])
                 break
-
+            
         # Shadow
         if decision['color'] == 'grey':
             new_game_state['shadow'] = decision['grey character power']
-            
+
+        # Get fantom
+        for char in new_game_state['character_cards']:
+            if char['color'] == fantom:
+                fantom = char
+                break
+        if fantom == None:
+            return 0
+
+        # Suspects in character cards
+        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == fantom['position']])
+        if characters_in_room == 1 or fantom['position'] == new_game_state['shadow']:
+            for index, char in enumerate(new_game_state['character_cards']):
+                characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == char['position']])
+                if characters_in_room > 1 and char['position'] != new_game_state['shadow']:
+                    new_game_state['character_cards'][index]['suspect'] = False
+        else:
+            for index, char in enumerate(new_game_state['character_cards']):
+                characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == char['position']])
+                if characters_in_room == 1 or char['position'] == new_game_state['shadow']:
+                    new_game_state['character_cards'][index]['suspect'] = False
+
+        # Suspects in active character cards
+        characters_in_room = len([q for q in new_game_state['active character_cards'] if q['position'] == fantom['position']])
+        if characters_in_room == 1 or fantom['position'] == new_game_state['shadow']:
+            for index, char in enumerate(new_game_state['active character_cards']):
+                characters_in_room = len([q for q in new_game_state['active character_cards'] if q['position'] == char['position']])
+                if characters_in_room > 1 and char['position'] != new_game_state['shadow']:
+                    new_game_state['active character_cards'][index]['suspect'] = False
+        else:
+            for index, char in enumerate(new_game_state['active character_cards']):
+                characters_in_room = len([q for q in new_game_state['active character_cards'] if q['position'] == char['position']])
+                if characters_in_room == 1 or char['position'] == new_game_state['shadow']:
+                    new_game_state['active character_cards'][index]['suspect'] = False
+
         return new_game_state
 
-    def compute_value_fantom(self, decision, game_state):
-        new_game_state = self.step(decision, game_state)
-        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == decision['position']])
+    def compute_value_fantom(self, decision, game_state, fantom):
+        new_game_state = self.step(decision, game_state, fantom)
+        for char in new_game_state['character_cards']:
+            if char['color'] == fantom:
+                fantom = char
+                break
+        if fantom == None:
+            return 0
+
+        score = 0
+        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == fantom['position']])
         
-        return characters_in_room
+        if characters_in_room == 1 or fantom['position'] == new_game_state['shadow']:
+            score = score + 1
+            for index, char in enumerate(new_game_state['character_cards']):
+                characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == char['position']])
+                if characters_in_room > 1 and char['position'] != new_game_state['shadow']:
+                    new_game_state['character_cards'][index]['suspect'] = False
+        
+        else:
+            for index, char in enumerate(new_game_state['character_cards']):
+                characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == char['position']])
+                if characters_in_room == 1 or char['position'] == new_game_state['shadow']:
+                    new_game_state['character_cards'][index]['suspect'] = False
+
+        score = score + len([q for q in new_game_state['character_cards'] if q['suspect'] == True])
+        return score
 
     def compute_value_inspector(self, decision, game_state):
-        new_game_state = self.step(decision, game_state)
-        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == decision['position']])
-        
-        return characters_in_room
+        score = 0        
+        for char in game_state['character_cards']:
+            if char['suspect'] == True:    
+                score = score + self.compute_value_fantom(decision, game_state, char['color'])
+        print(score)
+        return -score
 
     
     def get_possible_actions(self, game_state, fantom=False):
@@ -117,7 +175,7 @@ class World():
                             decision['grey character power'] = index
 
                 if fantom == True:
-                    decision['value'] = self.compute_value_fantom(decision, game_state)
+                    decision['value'] = self.compute_value_fantom(decision, game_state, game_state['fantom'])
                 else:
                     decision['value'] = self.compute_value_inspector(decision, game_state)
                 actions.append(decision)
