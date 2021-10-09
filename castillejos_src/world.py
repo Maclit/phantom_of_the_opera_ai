@@ -50,6 +50,45 @@ class World():
         return available_positions
 
     
+    def step(self, decision, game_state):
+        new_game_state = game_state
+        
+        # Positions
+        L = len(new_game_state['characters'])
+        for l in range(0, L):
+            if new_game_state['characters'][l]['color'] == decision['color']:
+                new_game_state['characters'][l]['position'] = decision['position']
+                break
+
+        # Positions
+        L = len(new_game_state['character_cards'])
+        for l in range(0, L):
+            if new_game_state['character_cards'][l]['color'] == decision['color']:
+                new_game_state['character_cards'][l]['position'] = decision['position']
+                break
+
+        # Positions
+        L = len(new_game_state['active character_cards'])
+        for l in range(0, L):
+            if new_game_state['active character_cards'][l]['color'] == decision['color']:
+                new_game_state['active character_cards'].remove(new_game_state['active character_cards'][l])
+                break
+            
+        return new_game_state
+
+    def compute_value_fantom(self, decision, game_state):
+        new_game_state = self.step(decision, game_state)
+        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == decision['position']])
+        
+        return characters_in_room
+
+    def compute_value_inspector(self, decision, game_state):
+        new_game_state = self.step(decision, game_state)
+        characters_in_room = len([q for q in new_game_state['character_cards'] if q['position'] == decision['position']])
+        
+        return characters_in_room
+
+    
     def get_possible_actions(self, game_state, fantom=False):
         active_cards = game_state['active character_cards']
         actions = []
@@ -67,6 +106,11 @@ class World():
                 decision = {}
                 decision['color'] = color
                 decision['position'] = position
-                decision['value'] = 0 # TODO
+
+                if fantom == True:
+                    decision['value'] = self.compute_value_fantom(decision, game_state)
+                else:
+                    decision['value'] = self.compute_value_inspector(decision, game_state)
+                actions.append(decision)
         
         return actions
