@@ -37,6 +37,7 @@ class Player():
         # work
         data = question["data"]
         
+        response_index = 0        
         if question['question type'] == 'select character':
             actions = world.get_possible_actions(question['game state'])
 
